@@ -1,0 +1,79 @@
+bundle agent sysopapi
+{
+  vars:
+    "outgoing" string => "/var/cfengine/outgoing";
+    "subdirs" slist => { "cf2/sched",
+                         "cf3/sched"
+    };
+classes:
+  any::
+    "in_client_data_transfer_execution" or => { "any" };
+  !populate_bz2_cache.agent.in_client_data_transfer_execution::
+    "populate_bz2_cache"  expression  =>  usemodule("populate_cache.sh","");
+
+  files:
+any::
+  "/var/cfengine/outgoing/."
+    handle => "sysopapi_file_flush_outgoing",
+    delete => default:tidy,
+    file_select => default:all,
+    depth_search => default:recurse("2"),
+    comment   => "when we want to cleanup the cache on nodes",
+    ifvarclass => "default:flush_outgoing";
+any::
+
+        "$(outgoing)/$(subdirs)/."
+          handle => "sysopapi_files_outgoing_dir_exist",
+          comment=> "we set cf2 observer in separate directory",
+          create => "true",
+          move_obstructions => "true",
+          perms  => default:mog("700","root","root");
+
+
+# SYSTEM OBSERVER (demo)
+  linux::
+    "$(outgoing)/resolv.conf"
+      link_from     =>  default:ln_s("/etc/resolv.conf"),
+      depends_on    => { "sysopapi_files_outgoing_dir_exist" } ;
+  linux::
+    "$(outgoing)/packages"
+      link_from     =>  default:ln_s("/var/cfengine/state/software_packages.csv"),
+      depends_on    => { "sysopapi_files_outgoing_dir_exist" } ;
+# CFENGINE OBSERVER
+  redhat::
+    "$(outgoing)/cf2/classes"
+      link_from     =>  default:ln_s("/var/cfengine/state/allclasses"),
+      depends_on    => { "sysopapi_files_outgoing_dir_exist" } ;
+  debian::
+    "$(outgoing)/cf2/classes"
+      link_from     =>  default:ln_s("/var/lib/cfengine2/state/allclasses"),
+      depends_on    => { "sysopapi_files_outgoing_dir_exist" } ;
+  linux::
+    "$(outgoing)/cf3/classes" -> { "cfengine/modules/populate_cache.sh" }
+      link_from     =>  default:ln_s("/tmp/cf3_classes"),
+      depends_on    => { "sysopapi_files_outgoing_dir_exist" } ;
+  linux::
+    "$(outgoing)/cf3/policy_server"
+      link_from     =>  default:ln_s("/var/cfengine/policy_server.dat"),
+      depends_on    => { "sysopapi_files_outgoing_dir_exist" } ;
+
+reports:
+  populate_cache_netcat_not_present::
+    "please install netcat"
+    action => immediate_syslog("sysopapi populate_cache_netcat_not_present");
+  populate_cache_outgoing_dir_too_big::
+    "$(outgoing) is too big"
+    action => immediate_syslog("sysopapi populate_cache_outgoing_dir_too_big");
+  populate_cache_network_link_error::
+    "populate_cache_network_link_error"
+    action => immediate_syslog("sysopapi populate_cache_network_link_error");
+}
+body action immediate_syslog(x)
+{
+  log_repaired => "udp_syslog";
+  log_kept     => "udp_syslog";
+  log_failed   => "udp_syslog";
+  log_string   => "$(x)";
+  ifelapsed    => "0";
+}
+
