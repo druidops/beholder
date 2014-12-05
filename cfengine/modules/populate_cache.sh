@@ -122,6 +122,7 @@ function send_raw_data_to_redis
     # cleanup after timeout
     trap "cleanup" ALRM INT
     # start the job wait for it and save its return value
+    [ "${verbose}" -ge 1 ] && echo "send_raw_data_to_redis: data($(echo ${raw_data} | wc -c))"
     echo -en "${raw_data}"  |
       nc -w3 "${reporthost}" "${port}" > /dev/null 2>/dev/null &
     wait "$!"; ret=$?
@@ -129,6 +130,7 @@ function send_raw_data_to_redis
     kill -ALRM "${a}"
     wait "${a}"
   else
+     [ "${verbose}" -ge 1 ] && echo "send_raw_data_to_redis: data($(echo ${raw_data} | wc -c))"
      echo -en "${raw_data}"  |
     nc -w3 "${reporthost}" "${port}" > /dev/null 2>/dev/null
     ret=$?
@@ -144,6 +146,8 @@ get_params "$@"
 if [ ! -d "${outgoing_dir}" ]; then
   echo "Error: outgoing_dir=[${outgoing_dir}] not exists"
   exit 1
+elif [ "${verbose}" -ge 1 ]; then
+  echo "outgoing_dir=[${outgoing_dir}] exists"
 fi
 
 list_of_files=( $(find ${outgoing_dir} -xtype f) )
@@ -152,10 +156,10 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-if [ "${get_list_files}" -eq 1 ]; then
+if [ "${get_list_files}" -eq 1 -o "${verbose}" -ge 1 ]; then
   echo "Outgoing files in [${outgoing_dir}]:"
-  printf '%s\n' "${list_of_files[@]}";
-  exit 0
+  printf ' %s\n' "${list_of_files[@]}";
+  [ "${get_list_files}" -eq 1 ] && exit 0
 fi
 
 if ! which "${transport}" >/dev/null 2>/dev/null ; then
