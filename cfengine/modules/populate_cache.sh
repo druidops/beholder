@@ -60,17 +60,6 @@ function get_params()
   : ${outgoing_dir:=/var/cfengine/outgoing}
   : ${HOSTNAME:=$(uname -n)}
 
-  # redis targeting host (default to cfengine policy server)
-  if [ -z "$reporthost" ]; then
-    if [ -f "/var/cfengine/policy_server.dat" ] ; then
-      reporthost=$(cat /var/cfengine/policy_server.dat)
-      [ ${verbose} -ge 1 ] && echo "fallback to policy hub [${reporthost}] for reporting"
-    else
-      echo "reporthost can't be set"
-      exit 1
-    fi
-  fi
-
   # only binary required : netcat/s_client depending on securitymodel
   case $securitymodel in
     0)
@@ -124,6 +113,21 @@ watchit()
   kill -ALRM $$
 }
 
+connect_to_redis()
+{
+  local s="$1"
+  local p="$2"
+
+  case ${transport} in
+    nc)
+      nc -w3 ${r} ${p} ;;
+    s_client)
+      openssl s_client -connect ${r}:${p} ;;
+    *)
+      usage; exit 1
+  esac
+}
+
 function send_raw_data_to_redis
 {
   [ -z "${raw_data}" ] && return
@@ -135,15 +139,15 @@ function send_raw_data_to_redis
     # start the job wait for it and save its return value
     [ "${verbose}" -ge 1 ] && echo "send_raw_data_to_redis: data($(echo ${raw_data} | wc -c))"
     echo -en "${raw_data}"  |
-      nc -w3 "${reporthost}" "${port}" > /dev/null 2>/dev/null &
+     connect_to_redis "${reporthost}" "${port}"   > /dev/null 2>/dev/null &
     wait "$!"; ret=$?
     # send ALRM signal to watcherand wait for it to finish
     kill -ALRM "${a}"
     wait "${a}"
   else
-     [ "${verbose}" -ge 1 ] && echo "send_raw_data_to_redis: data($(echo ${raw_data} | wc -c))"
-     echo -en "${raw_data}"  |
-    nc -w3 "${reporthost}" "${port}" > /dev/null 2>/dev/null
+    [ "${verbose}" -ge 1 ] && echo "send_raw_data_to_redis: data($(echo ${raw_data} | wc -c))"
+    echo -en "${raw_data}"  |
+     connect_to_redis "${reporthost}" "${port}" > /dev/null 2>/dev/null
     ret=$?
   fi
   # return the value
@@ -173,11 +177,21 @@ if [ "${get_list_files}" -eq 1 -o "${verbose}" -ge 1 ]; then
   [ "${get_list_files}" -eq 1 ] && exit 0
 fi
 
+# redis targeting host (default to cfengine policy server)
+if [ -z "$reporthost" ]; then
+  if [ -f "/var/cfengine/policy_server.dat" ] ; then
+    reporthost=$(cat /var/cfengine/policy_server.dat)
+    [ ${verbose} -ge 1 ] && echo "fallback to policy hub [${reporthost}] for reporting"
+  else
+    echo "reporthost can't be set"
+    exit 1
+  fi
+fi
+
 if ! which "${transport}" >/dev/null 2>/dev/null ; then
   echo "+populate_cache_${transport}_not_present"
   exit 1
 fi
-
 
 # check size
 alldatasize=$(du -skD ${outgoing_dir} | awk '{print $1}')
