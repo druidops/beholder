@@ -62,20 +62,6 @@ function get_params()
   : "${ttl:=3600}"
   : "${outgoing_dir:=/var/cfengine/outgoing}"
   : "${HOSTNAME:=$(uname -n)}"
-<<<<<<< HEAD
-=======
-
-  # redis targeting host (default to cfengine policy server)
-  if [ -z "$reporthost" ]; then
-    if [ -f "/var/cfengine/policy_server.dat" ] ; then
-      reporthost=$(cat /var/cfengine/policy_server.dat)
-      [ ${verbose} -ge 1 ] && echo "fallback to policy hub [${reporthost}] for reporting"
-    else
-      echo "reporthost can't be set"
-      exit 1
-    fi
-  fi
->>>>>>> 784745f13d5dec747300b9c9e77d30d1304bb128
 
   # only binary required : netcat/s_client depending on securitymodel
   case $securitymodel in
@@ -132,7 +118,7 @@ connect_to_redis()
     nc)
       nc -w3 "${r}" "${p}" ;;
     s_client)
-      openssl s_client -connect "${r}":"${p}" ;;
+      openssl s_client -connect "${r}:${p}" ;;
     *)
       usage; exit 1
   esac
