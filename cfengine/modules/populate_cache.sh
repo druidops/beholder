@@ -1,7 +1,7 @@
 #!/bin/bash
 umask 277
 
-VERSION="0.1"
+VERSION="0.2"
 
 function usage()
 {
@@ -111,14 +111,14 @@ watchit()
 
 connect_to_redis()
 {
-  local s="$1"
+  local r="$1"
   local p="$2"
 
   case ${transport} in
     nc)
-      nc -w3 ${r} ${p} ;;
+      nc -w3 "${r}" "${p}" ;;
     s_client)
-      openssl s_client -connect ${r}:${p} ;;
+      openssl s_client -connect "${r}":"${p}" ;;
     *)
       usage; exit 1
   esac
@@ -127,7 +127,6 @@ connect_to_redis()
 function send_raw_data_to_redis
 {
   [ -z "${raw_data}" ] && return
-  if [ -n "${timeout}" ]; then
     # start the timer subshell and save its pid
     watchit& a=$!
     # cleanup after timeout
@@ -140,12 +139,6 @@ function send_raw_data_to_redis
     # send ALRM signal to watcherand wait for it to finish
     kill -ALRM "${a}"
     wait "${a}"
-  else
-    [ "${verbose}" -ge 1 ] && echo "send_raw_data_to_redis: data($(echo ${raw_data} | wc -c))"
-    echo -en "${raw_data}"  |
-     connect_to_redis "${reporthost}" "${port}" > /dev/null 2>/dev/null
-    ret=$?
-  fi
   # return the value
   return $ret
 }
