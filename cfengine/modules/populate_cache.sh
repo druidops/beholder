@@ -28,7 +28,7 @@ function get_params()
   local GETOPT_TEMP
 
   GETOPT_TEMP=$(getopt -o vhdPls:r:t:p:o: --long \
-  verbose,help,debug,pipelining,list,securitymodel:,reporthost:,timeout:,port:,outgoing: -n 'populate_cache.sh' -- "$@")
+  verbose,help,debug,pipelining,list,securitymodel:,reporthost:,timeout:,port:,outgoing:,ttl: -n 'populate_cache.sh' -- "$@")
 
   if [ $? != 0 ] ; then echo "getopt error, terminating..." >&2 ; exit 1 ; fi
 
@@ -87,16 +87,8 @@ function get_params()
   if [ "${verbose}" -ge 1 ]; then
     echo "Security model is (${securitymodel})"
     echo "Tranport is (${transport})"
-    if [ -z "${timeout}" ]; then
-      echo "No timeout command"
-    else
-      echo "Timeout command set to (${timeout}s)"
-    fi
-    if [ -z "${pipelining}" ]; then
-      echo "Pipelining off"
-    else
-      echo "Pipelining on"
-    fi
+    echo "Timeout command set to (${timeout}s)"
+    echo "Pipelining set to ${pipelining}"
     echo "TCP port: (${port})"
     echo "value ttl: (${ttl})"
   fi
