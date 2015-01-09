@@ -1,3 +1,6 @@
+Redis
+====
+version >=2.8
 Api side
 ====
   * python-redis
