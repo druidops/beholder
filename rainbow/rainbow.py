@@ -75,7 +75,12 @@ def redis_query(redis_server, method, key):
             result = r.get(item)
             if result:
                 # Split the key name, which format is <hostname>#<file>
-                hostname, key = item.split('#')
+                try:
+                    hostname, key = item.split('#')
+                except ValueError:
+                    print "Warning - Skipping key with invalid format: %s" % item
+                    continue
+
                 output.put((hostname, result))
 
     elif method == "KEYS":
@@ -83,7 +88,12 @@ def redis_query(redis_server, method, key):
         items = r.keys('*')
         for item in items:
             # Split the key name, which format is <hostname>#<file>
-            hostname, key = item.split('#')
+            try:
+                hostname, key = item.split('#')
+            except ValueError:
+                print "Warning - Skipping key with invalid format: %s" % item
+                continue
+
             output.put(key)
     else:
         print "Not supported. You're doing it wrong."
