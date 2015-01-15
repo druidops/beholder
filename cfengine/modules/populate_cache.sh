@@ -177,7 +177,7 @@ if [ -z "$reporthost" ]; then
   fi
 fi
 
-if ! which "${transport}" >/dev/null 2>/dev/null ; then
+if ! type "${transport}" >/dev/null 2>/dev/null ; then
   echo "+populate_cache_${transport}_not_present"
   exit 1
 fi
