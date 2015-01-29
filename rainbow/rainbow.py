@@ -26,7 +26,7 @@ from termcolor import colored
 from threading import Thread
 
 
-REDIS_TIMEOUT = 2
+REDIS_TIMEOUT = 120
 
 redis_servers = ['redis1.internal',
                  'redis2.internal',
