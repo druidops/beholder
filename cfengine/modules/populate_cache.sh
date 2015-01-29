@@ -9,17 +9,18 @@ function usage()
   echo "Usage: populate_cache.sh [option]"
   echo "Compress and send outgoing linked files to REDIS server"
   echo ""
-  echo "  -h, --help                 print this usage and exit"
-  echo "  -v, --verbose              verbose mode [0-1] (default:0)"
-  echo "  -d, --debug                debug mode [0-1] (default:0)"
   echo "  -P, --pipelining           pipelining mode [0-1] (default:0)"
+  echo "  -T, --ttl=<secs>           ttl value (default:3600)"
+  echo "  -d, --debug                debug mode [0-1] (default:0)"
+  echo "  -h, --help                 print this usage and exit"
+  echo "  -l, --list                 list outgoing files"
+  echo "  -o, --outgoing=<directory> outgoing directory path (default:/var/cfengine/outgoing)"
   echo "  -p, --port=<port>          remote port number (default:6379)"
   echo "  -r, --reporthost=<host>    REDIS server address (default:policy_server)"
   echo "  -s, --securitymodel=<n>    security model number [0-3] (default:0)"
   echo "  -t, --timeout=<n>          timeout command (default:10s)"
-  echo "  -o, --outgoing=<directory> outgoing directory path (default:/var/cfengine/outgoing)"
-  echo "  -T, --ttl=<secs>           ttl value (default:3600)"
-  echo "  -l, --list                 list outgoing files"
+  echo "  -v, --verbose              verbose mode [0-1] (default:0)"
+  echo "  -w  --wait=<n>             netcat timeout if used (default:8s)"
   echo
 }
 
@@ -27,13 +28,11 @@ function get_params()
 {
   local GETOPT_TEMP
 
-  GETOPT_TEMP=$(getopt -o vhdPls:r:t:p:o: --long \
-  verbose,help,debug,pipelining,list,securitymodel:,reporthost:,timeout:,port:,outgoing:,ttl: -n 'populate_cache.sh' -- "$@")
+  GETOPT_TEMP=$(getopt -o vhdlPw:s:T:r:t:p:o: --long \
+  verbose,help,debug,list,pipelining,wait:,securitymodel:,ttl:reporthost:,timeout:,port:,outgoing: -n 'populate_cache.sh' -- "$@")
 
   if [ $? != 0 ] ; then echo "getopt error, terminating..." >&2 ; exit 1 ; fi
-
   eval set -- "$GETOPT_TEMP"
-
   while true ; do
     case "$1" in
       -v | --verbose )      verbose=1;          shift ;;
@@ -42,6 +41,7 @@ function get_params()
       -s | --securitymodel) securitymodel="$2"; shift 2;;
       -r | --reporthost)    reporthost=$2;      shift 2;;
       -t | --timeout)       timeout=$2;         shift 2;;
+      -w | --wait)          nc_tm=$2;           shift 2;;
       -p | --port)          port=$2;            shift 2;;
       -o | --outgoing)      outgoing_dir=$2;    shift 2;;
       -T | --ttl)           ttl=$2;             shift 2;;
@@ -54,6 +54,7 @@ function get_params()
 
   : "${securitymodel:=0}"
   : "${timeout:=10}" # 10s
+  : "${nc_tm:=8}"
   : "${debug:=0}"
   : "${verbose:=${debug}}"
   : "${pipelining:=0}"
@@ -88,6 +89,7 @@ function get_params()
     echo "Security model is (${securitymodel})"
     echo "Tranport is (${transport})"
     echo "Timeout command set to (${timeout}s)"
+    echo "Netcat timeout set to (${nc_tm}s)"
     echo "Pipelining set to ${pipelining}"
     echo "TCP port: (${port})"
     echo "value ttl: (${ttl})"
@@ -116,7 +118,7 @@ connect_to_redis()
 
   case ${transport} in
     nc)
-      nc -w3 "${r}" "${p}" ;;
+      nc -w"${nc_tm}" "${r}" "${p}" ;;
     s_client)
       openssl s_client -connect "${r}:${p}" ;;
     *)
@@ -200,7 +202,7 @@ date=$(date +%s)
 
 for f in "${list_of_files[@]}"
 do
-  suffix=${f:23} # strip off /var/cfengine/outgoing/
+  suffix=${f#${outgoing_dir}/} # strip off /var/cfengine/outgoing/
   [ "${suffix}" = "" ] && continue
   key="${HOSTNAME}#${suffix}"
   data=$(bzip2 -c < "${f}" | openssl enc -base64 | tr -d '\n' )
