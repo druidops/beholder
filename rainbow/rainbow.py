@@ -112,7 +112,8 @@ class Rainbow:
 
         threads = []
         for redis_server in self.redis_servers:
-            worker = Thread(target=self.redis_query, args=(redis_server, 'KEYS', '',))
+            worker = Thread(target=self.redis_query,
+                            args=(redis_server, 'KEYS', '',))
             worker.start()
             threads.append(worker)
 
@@ -144,7 +145,7 @@ class Rainbow:
                 print uniq_files[k], k
 
     def display_redis_specific_key(self):
-        """ Display contents of a specific key found over all the Redis servers"""
+        """ Display contents of a specific key through all the Redis servers"""
 
         # Actual timestamp of Redis query
         now = time.time()
@@ -172,17 +173,20 @@ class Rainbow:
             except:
                 c = "<error while decompressing bz2 data"
             if self.args.signature:
-                self.formated_output(now, hostname, epoch_redis, epoch_mtime, file_md5)
+                self.formated_output(now, hostname, epoch_redis,
+                                     epoch_mtime, file_md5)
             else:
                 for line in c.split('\n'):
-                    self.formated_output(now, hostname, epoch_redis, epoch_mtime, line)
+                    self.formated_output(now, hostname, epoch_redis,
+                                         epoch_mtime, line)
 
     def redis_get_specific_key(self, key):
         """ Fetch contents of a specific key over all the Redis servers"""
 
         threads = []
         for redis_server in self.redis_servers:
-            worker = Thread(target=self.redis_query, args=(redis_server, 'GET', key,))
+            worker = Thread(target=self.redis_query,
+                            args=(redis_server, 'GET', key,))
             worker.start()
             threads.append(worker)
 
