@@ -1,0 +1,28 @@
+-Catch Redis connection errors:
+
+> $ ./rainbow/rainbow.py
+> Querying_redis_server redis1.internal
+> Querying_redis_server redis2.internal
+> Querying_redis_server redis3.internal
+> Querying_redis_server redis4.internal
+> Exception in thread Thread-4:
+> Traceback (most recent call last):
+>   File "/usr/lib/python2.7/threading.py", line 810, in __bootstrap_inner
+>     self.run()
+>   File "/usr/lib/python2.7/threading.py", line 763, in run
+>     self.__target(*self.__args, **self.__kwargs)
+>   File "./rainbow/rainbow.py", line 84, in redis_query
+>     items = r.keys('*#%s' % key)
+>   File "/usr/lib/python2.7/site-packages/redis/client.py", line 919, in keys
+>     return self.execute_command('KEYS', pattern)
+>   File "/usr/lib/python2.7/site-packages/redis/client.py", line 570, in execute_command
+>     connection.send_command(*args)
+>   File "/usr/lib/python2.7/site-packages/redis/connection.py", line 556, in send_command
+>     self.send_packed_command(self.pack_command(*args))
+>   File "/usr/lib/python2.7/site-packages/redis/connection.py", line 532, in send_packed_command
+>     self.connect()
+>   File "/usr/lib/python2.7/site-packages/redis/connection.py", line 436, in connect
+>     raise ConnectionError(self._error_message(e))
+> ConnectionError: Error -2 connecting to redis4.internal:6379. Name or service not known.
+
+-Catch ctrl+c
