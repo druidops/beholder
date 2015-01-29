@@ -139,10 +139,12 @@ class Rainbow:
 
         if self.args.color:
             for k in sorted(uniq_files):
-                print colored(uniq_files[k], 'blue'), colored(k, 'cyan')
+                # 13 here because of color escape characters \033[xx(x)
+                print "%13s %s" % (colored(uniq_files[k], 'blue'),
+                                   colored(k, 'cyan'))
         else:
             for k in sorted(uniq_files):
-                print uniq_files[k], k
+                print "%5s %s" % (uniq_files[k], k)
 
     def display_redis_specific_key(self):
         """ Display contents of a specific key through all the Redis servers"""
