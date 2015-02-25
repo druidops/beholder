@@ -22,17 +22,13 @@ import argparse
 import bz2
 import time
 import Queue
+import sys,os
+import ConfigParser
+
 from termcolor import colored
 from threading import Thread
 
-
 REDIS_TIMEOUT = 120
-
-redis_servers = ['redis1.internal',
-                 'redis2.internal',
-                 'redis3.internal',
-                 'redis4.internal']
-
 
 class Rainbow:
 
@@ -217,6 +213,27 @@ if __name__ == '__main__':
                         help="MD5 of file", action='store_true')
 
     args = parser.parse_args()
+
+    config_filepath = os.path.abspath(
+        os.path.expanduser(
+            '~/.rainbow.cf'
+            )
+        )
+
+    config = ConfigParser.RawConfigParser()
+    if not os.path.exists(config_filepath):
+        config.add_section('query_servers')
+        config.set('query_servers', 'hostnames','redis1.example.org,redis2.example.org')
+        config.write(open(config_filepath,'w'))
+        print("Created an empty config file at %s." % config_filepath)
+        print("Please modify it & re-run this command.")
+        sys.exit(1)
+
+    config.read(config_filepath)
+    redis_servers = config.get('query_servers','hostnames').split(',')
+    if redis_servers[0] == 'redis1.example.org':
+        print("Please set your own redis instance in %s file & re-run this command." % config_filepath)
+        sys.exit(1)
 
     rb = Rainbow(args, redis_servers, REDIS_TIMEOUT)
     rb.run()
