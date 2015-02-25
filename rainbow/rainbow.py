@@ -20,15 +20,17 @@ limitations under the License.
 import redis
 import argparse
 import bz2
-import time
 import Queue
-import sys,os
+import sys
+import os
+import time
 import ConfigParser
 
 from termcolor import colored
 from threading import Thread
 
 REDIS_TIMEOUT = 120
+
 
 class Rainbow:
 
@@ -40,6 +42,7 @@ class Rainbow:
         self.output_queue = Queue.Queue()
 
     def run(self):
+
         if self.args.available:
             self.redis_get_all_keys()
         else:
@@ -85,7 +88,8 @@ class Rainbow:
                     try:
                         hostname, key = item.split('#')
                     except ValueError:
-                        print "Warning - Skipping key with invalid format: %s" % item
+                        print "Warning - Skipping key with invalid \
+                                format: %s" % item
                         continue
                     self.output_queue.put((hostname, result))
 
@@ -97,7 +101,8 @@ class Rainbow:
                 try:
                     hostname, key = item.split('#')
                 except ValueError:
-                    print "Warning - Skipping key with invalid format: %s" % item
+                    print "Warning - Skipping key with invalid \
+                            format: %s" % item
                     continue
                 self.output_queue.put(key)
         else:
@@ -199,6 +204,22 @@ class Rainbow:
             print 'try the -ac switch for a list of all available keys'
 
 
+def autogen_conf(f):
+    config.add_section('query_servers')
+    config.set('query_servers', 'hostnames', 'redis1.example.org, \
+               redis2.example.org')
+    config.write(open(f, 'w'))
+    print("Created an empty config file at %s." % f)
+    print("Please modify it & re-run this command.")
+    sys.exit(1)
+
+
+def test_default_conf(f):
+    if redis_servers[0] == 'redis1.example.org':
+        print("Please set your own redis instance in %s file \
+              and re-run this command." % f)
+        sys.exit(1)
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -211,29 +232,21 @@ if __name__ == '__main__':
                         help="Colorize output", action='store_true')
     parser.add_argument("-s", "--signature",
                         help="MD5 of file", action='store_true')
+    parser.add_argument("-C", "--conffile",
+                        help="Configuration file to Use")
 
     args = parser.parse_args()
 
-    config_filepath = os.path.abspath(
-        os.path.expanduser(
-            '~/.rainbow.cf'
-            )
-        )
-
     config = ConfigParser.RawConfigParser()
-    if not os.path.exists(config_filepath):
-        config.add_section('query_servers')
-        config.set('query_servers', 'hostnames','redis1.example.org,redis2.example.org')
-        config.write(open(config_filepath,'w'))
-        print("Created an empty config file at %s." % config_filepath)
-        print("Please modify it & re-run this command.")
-        sys.exit(1)
+    if args.conffile:
+        conffile = args.conffile
+    else:
+        conffile = os.path.abspath(os.path.expanduser('~/.rainbow.cf'))
+    if not os.path.exists(conffile):
+        autogen_conf(conffile)
 
-    config.read(config_filepath)
-    redis_servers = config.get('query_servers','hostnames').split(',')
-    if redis_servers[0] == 'redis1.example.org':
-        print("Please set your own redis instance in %s file & re-run this command." % config_filepath)
-        sys.exit(1)
-
+    config.read(conffile)
+    redis_servers = config.get('query_servers', 'hostnames').split(',')
+    test_default_conf(conffile)
     rb = Rainbow(args, redis_servers, REDIS_TIMEOUT)
     rb.run()
