@@ -7,7 +7,7 @@ Copyright [2014,2015] [beholder developers]
 This file is part of beholder project
 
 Provides a generic interface to allow rainbow to register resources.
- - get/set resources
+ - get/put/update resources
  - dump to disk for persistence
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@ limitations under the License.
 """
 
 import cPickle, anydbm
-from os.path import isfile
+import os.path
 
 class rainbow_cache_error(Exception):
     pass
@@ -34,27 +34,35 @@ _resources = {}
 
 class rainbowCache():
 
-  def __init__(self, resourceName, dbm_file='/var/cache/rainbow.index'):
-    self.dbm_file = dbm_file
+  def __init__(self, resourceName=None, dbm_root='/var/cache/'):
 
-    if resourceName == "":
+    if resourceName == None:
         raise rainbow_cache_error("Invalid resource name!")
+
+    self.resourceName = resourceName
+    self.dbm_file = os.path.join(dbm_root, "%s.index" % resourceName)
 
     if resourceName in _resources.keys():
         pass
 
     else:
         _resources.setdefault(resourceName, {})
-        if isfile(dbm_file):
-            dbmIn = anydbm.open(dbm_file)
-            if resourceName in dbmIn:
-                _resources[resourceName] = cPickle.loads(dbmIn[resourceName])
+        if os.path.isfile(self.dbm_file):
+            dbmIn = anydbm.open(self.dbm_file)
+            for resource in dbmIn:
+                _resources[resource] = cPickle.loads(dbmIn[resource])
 
-  def update(self, resourceName, resourceContent):
-    _resources[resourceName].update(resourceContent)
+  def update(self, resourceContent, resourceName=None):
+    if resourceName == None:
+      _resources.update(resourceContent)
+    else:
+      _resources[resourceName].update(resourceContent)
 
-  def flush(self, resourceName):
-    _resources[resourceName] = {}
+  def flush(self, resourceName=None):
+    if resourceName == None:
+      _resources = {}
+    else:
+      _resources[resourceName] = {}
 
   def dump(self):
     dbmOut = anydbm.open(self.dbm_file,'n')
@@ -64,8 +72,7 @@ class rainbowCache():
 
   def __str__(self):
     out = ''
-    for resource in _resources[resource]:
+    for resource in _resources:
       out += "%s: %s\n" % (resource, _resources[resource])
     return out
-
 
