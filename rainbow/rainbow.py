@@ -71,8 +71,7 @@ class Rainbow:
             mtime_ts_str = colored(mtime_ts_str, 'blue')
             line = colored(line, 'white', 'on_grey')
 
-        if self.args.verbose:
-            print "%s (%s/%s) %s" % (hostname, redis_ts_str, mtime_ts_str, line)
+        print "%s (%s/%s) %s" % (hostname, redis_ts_str, mtime_ts_str, line)
 
     def redis_query(self, redis_server, method, key):
         """ Query a Redis server (within a thread)
