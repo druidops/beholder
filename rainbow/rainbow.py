@@ -78,7 +78,8 @@ class Rainbow:
         """ Query a Redis server (within a thread)
             and write results to the shared queue"""
 
-        print "Querying_redis_server %s" % redis_server
+        if self.args.verbose:
+            print "Querying_redis_server %s" % redis_server
 
         r = redis.Redis(host=redis_server, port=6379)
 
