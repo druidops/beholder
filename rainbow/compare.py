@@ -33,15 +33,40 @@ class rainbow_compare_error(Exception):
 
 class rainbowCompare():
 
-  def __init__(self):
+  def __init__(self, type):
+    self.type = type
 
     pass
 
+  def cmp(self, resourceA, resourceB):
+    return resourceA.split(' ')[3] != resourceB.split(' ')[3]
 
-  def diff(self, cur_resource, new_resource):
+  def diff(self, resourcesA, resourcesB):
     # 1. select changed resources
-    # 2. foreach entry calculate the diff (resource depend)
+    keysA = set(resourcesA.keys())
+    keysB = set(resourcesB.keys())
+    inter = keysA.intersection(keysB)
+    addResources = keysB - inter
+    remResources = keysA - inter
+    chgResources = []
+    for r in inter:
+      if self.cmp(resourcesA[r],resourcesB[r]):
+        chgResources.append(r)
+    #print addResources, remResources
+    #print chgResources
+    # 2. foreach chgt diff compute
+    for r in chgResources:
+      A = set( resourcesA[r].split(' ')[0].split('\n') )
+      B = set( resourcesB[r].split(' ')[0].split('\n') )
+      interAB = A.intersection(B)
     # 3. print the diff
+      for d in A - interAB:
+        print "%s,%s,-,%s" % (resourcesA[r].split(' ')[2], self.type, d)
+      for d in B - interAB:
+        print "%s,%s,+,%s" % (resourcesB[r].split(' ')[2], self.type, d)
+    for r in addResources:
+      for d in resourcesB[r].split(' ')[0].split('\n'):
+        print "%s,%s,+,%s" % (resourcesB[r].split(' ')[2], self.type, d)
     pass
 
     # packages resource diff fmt
@@ -49,3 +74,13 @@ class rainbowCompare():
     # del "$(_ts),$(b),-,$(_prev)"
     # with _ts epoch_mtime, b packages, $(_cur)|$(_prev) line
 
+if __name__ == '__main__':
+  t1 = { 'h1': '<base64_encoded_data11> <epoch_redis> t1h1<epoch_mtime> <file_checksum11>',
+         'h2': "t1h2<base64_encoded_data>\nt1h2<base64_encoded_data> <epoch_redis> t1h2<epoch_mtime> <file_checksum12>"
+       }
+  t2 = { 'h1': '<base64_encoded_data21> <epoch_redis> t2h1<epoch_mtime> <file_checksum21>',
+         'h2': 't2h2<base64_encoded_data> <epoch_redis> t2h2<epoch_mtime> <file_checksum21>',
+         'h3': "t2h31<base64_encoded_data>\nt2h32<base64_encoded_data> <epoch_redis> t2h3<epoch_mtime> <file_checksum>"
+       }
+  rc = rainbowCompare('packages')
+  rc.diff(t1,t2)
