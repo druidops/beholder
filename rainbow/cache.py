@@ -34,7 +34,7 @@ _resources = {}
 
 class rainbowCache():
 
-  def __init__(self, resourceName=None, dbm_root='/var/cache/'):
+  def __init__(self, resourceName=None, dbm_root='/var/cache/elk'):
 
     if resourceName == None:
         raise rainbow_cache_error("Invalid resource name!")
@@ -69,6 +69,9 @@ class rainbowCache():
     for resource in _resources:
       dbmOut[resource] = cPickle.dumps(_resources[resource], 1)
     dbmOut.close
+
+  def getResources(self):
+    return _resources[self.resourceName]
 
   def __str__(self):
     out = ''
