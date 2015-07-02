@@ -54,10 +54,13 @@ class Rainbow:
     def formated_output(self, now, hostname, redis_ts, mtime_ts, line):
         """Colored output of a Redis entry plus metadata"""
 
-        redis_ts_str = time.strftime('%H:%M',
-                                     time.localtime(int(redis_ts)))
-        mtime_ts_str = time.strftime('%Y-%m-%dT%H:%M',
-                                     time.localtime(int(mtime_ts)))
+        if self.args.logstash:
+            pass
+        else:
+            redis_ts_str = time.strftime('%H:%M',
+                                         time.localtime(int(redis_ts)))
+            mtime_ts_str = time.strftime('%Y-%m-%dT%H:%M',
+                                         time.localtime(int(mtime_ts)))
         if self.args.color:
             hostname = colored(hostname, 'cyan')
             diff = now - float(redis_ts)
