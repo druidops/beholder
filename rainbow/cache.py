@@ -34,7 +34,7 @@ _resources = {}
 
 class rainbowCache():
 
-  def __init__(self, resourceName=None, dbm_root='/var/cache/elk'):
+  def __init__(self, resourceName=None, dbm_root='/tmp/rainbow/'):
 
     if resourceName == None:
         raise rainbow_cache_error("Invalid resource name!")
