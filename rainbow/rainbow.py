@@ -227,8 +227,8 @@ class Rainbow:
 
 def autogen_conf(f):
     config.add_section('query_servers')
-    config.set('query_servers', 'hostnames', 'redis1.example.org, \
-               redis2.example.org')
+    config.set('query_servers', 'hostnames', 'redis1.example.org,'
+                                             'redis2.example.org')
     config.write(open(f, 'w'))
     print("Created an empty config file at %s." % f)
     print("Please modify it & re-run this command.")
@@ -237,8 +237,8 @@ def autogen_conf(f):
 
 def test_default_conf(f):
     if redis_servers[0] == 'redis1.example.org':
-        print("Please set your own redis instance in %s file \
-              and re-run this command." % f)
+        print("Please set your own redis instance in %s file "
+              "and re-run this command." % f)
         sys.exit(1)
 
 if __name__ == '__main__':
