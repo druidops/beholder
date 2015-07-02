@@ -59,19 +59,21 @@ class rainbowCompare():
     #print chgResources
     # 2. foreach chgt diff compute
     for r in chgResources:
-      dataA = bz2.decompress(resourcesA[r].split(' ')[0].decode("base64"))
-      dataB = bz2.decompress(resourcesB[r].split(' ')[0].decode("base64"))
+      rA = resourcesA[r].split(' ')
+      rB = resourcesB[r].split(' ')
+      dataA = bz2.decompress(rA[0].decode("base64"))
+      dataB = bz2.decompress(rB[0].decode("base64"))
       A = set( dataA.split('\n') )
       B = set( dataB.split('\n') )
       interAB = A.intersection(B)
     # 3. print the diff
       for d in A - interAB:
-        print "%s,%s,-,%s" % (resourcesA[r].split(' ')[2], self.type, d)
+        print "%s,%s,-,%s" % (rA[2], self.type, d)
       for d in B - interAB:
-        print "%s,%s,+,%s" % (resourcesB[r].split(' ')[2], self.type, d)
+        print "%s,%s,+,%s" % (rB[2], self.type, d)
     for r in addResources:
-      for d in bz2.decompress(resourcesB[r].split(' ')[0].decode("base64")).split('\n'):
-        print "%s,%s,+,%s" % (resourcesB[r].split(' ')[2], self.type, d)
+      for d in bz2.decompress(rB[0].decode("base64")).split('\n'):
+        print "%s,%s,+,%s" % (rB[2], self.type, d)
     pass
 
     # packages resource diff fmt
