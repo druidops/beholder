@@ -92,8 +92,9 @@ class Rainbow:
                     try:
                         hostname, key = item.split('#')
                     except ValueError:
-                        print "Warning - Skipping key with invalid \
-                                format: %s" % item
+                        if self.args.verbose:
+                            print( "Warning - Skipping key with invalid "
+                                   "format: %s" % item )
                         continue
                     self.output_queue.put((hostname, result))
 
@@ -105,8 +106,9 @@ class Rainbow:
                 try:
                     hostname, key = item.split('#')
                 except ValueError:
-                    print "Warning - Skipping key with invalid \
-                            format: %s" % item
+                    if self.args.verbose:
+                        print( "Warning - Skipping key with invalid "
+                               "format: %s" % item )
                     continue
                 self.output_queue.put(key)
         else:
