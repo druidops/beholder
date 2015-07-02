@@ -26,7 +26,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import bz2
 
 class rainbow_compare_error(Exception):
     pass
@@ -39,6 +39,9 @@ class rainbowCompare():
     pass
 
   def cmp(self, resourceA, resourceB):
+    ''' resource[3] (md5sum) comparaison
+
+    '''
     return resourceA.split(' ')[3] != resourceB.split(' ')[3]
 
   def diff(self, resourcesA, resourcesB):
@@ -56,8 +59,10 @@ class rainbowCompare():
     #print chgResources
     # 2. foreach chgt diff compute
     for r in chgResources:
-      A = set( resourcesA[r].split(' ')[0].split('\n') )
-      B = set( resourcesB[r].split(' ')[0].split('\n') )
+      dataA = bz2.decompress(resourcesA[r].split(' ')[0].decode("base64"))
+      dataB = bz2.decompress(resourcesB[r].split(' ')[0].decode("base64"))
+      A = set( dataA.split('\n') )
+      B = set( dataB.split('\n') )
       interAB = A.intersection(B)
     # 3. print the diff
       for d in A - interAB:
@@ -65,7 +70,7 @@ class rainbowCompare():
       for d in B - interAB:
         print "%s,%s,+,%s" % (resourcesB[r].split(' ')[2], self.type, d)
     for r in addResources:
-      for d in resourcesB[r].split(' ')[0].split('\n'):
+      for d in bz2.decompress(resourcesB[r].split(' ')[0].decode("base64")).split('\n'):
         print "%s,%s,+,%s" % (resourcesB[r].split(' ')[2], self.type, d)
     pass
 
@@ -75,12 +80,12 @@ class rainbowCompare():
     # with _ts epoch_mtime, b packages, $(_cur)|$(_prev) line
 
 if __name__ == '__main__':
-  t1 = { 'h1': '<base64_encoded_data11> <epoch_redis> t1h1<epoch_mtime> <file_checksum11>',
-         'h2': "t1h2<base64_encoded_data>\nt1h2<base64_encoded_data> <epoch_redis> t1h2<epoch_mtime> <file_checksum12>"
+  t1 = { 'h1': bz2.compress('<base64_encoded_data11>').encode("base64") + ' <epoch_redis> t1h1<epoch_mtime> <file_checksum11>',
+         'h2': bz2.compress("t1h2<base64_encoded_data>\nt1h2<base64_encoded_data>").encode("base64") + ' <epoch_redis> t1h2<epoch_mtime> <file_checksum12>'
        }
-  t2 = { 'h1': '<base64_encoded_data21> <epoch_redis> t2h1<epoch_mtime> <file_checksum21>',
-         'h2': 't2h2<base64_encoded_data> <epoch_redis> t2h2<epoch_mtime> <file_checksum21>',
-         'h3': "t2h31<base64_encoded_data>\nt2h32<base64_encoded_data> <epoch_redis> t2h3<epoch_mtime> <file_checksum>"
+  t2 = { 'h1': bz2.compress('<base64_encoded_data21>').encode("base64") + ' <epoch_redis> t2h1<epoch_mtime> <file_checksum21>',
+         'h2': bz2.compress('t2h2<base64_encoded_data>').encode("base64") + ' <epoch_redis> t2h2<epoch_mtime> <file_checksum21>',
+         'h3': bz2.compress("t2h31<base64_encoded_data>\nt2h32<base64_encoded_data>").encode("base64") + ' <epoch_redis> t2h3<epoch_mtime> <file_checksum>'
        }
   rc = rainbowCompare('packages')
   rc.diff(t1,t2)
