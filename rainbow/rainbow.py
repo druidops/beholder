@@ -25,9 +25,11 @@ import sys
 import os
 import time
 import ConfigParser
+from threading import Thread
 
 from termcolor import colored
-from threading import Thread
+from cache import rainbowCache
+from compare import rainbowCompare
 
 REDIS_TIMEOUT = 120
 
@@ -36,6 +38,7 @@ class Rainbow:
 
     def __init__(self, cmdln_args, redis_servers, redis_timeout):
         self.args = cmdln_args
+        self.cached = False
         self.redis_timeout = redis_timeout
         self.redis_servers = redis_servers
         # Shared queue to store query results from Redis
@@ -68,7 +71,8 @@ class Rainbow:
             mtime_ts_str = colored(mtime_ts_str, 'blue')
             line = colored(line, 'white', 'on_grey')
 
-        print "%s (%s/%s) %s" % (hostname, redis_ts_str, mtime_ts_str, line)
+        if self.args.verbose:
+            print "%s (%s/%s) %s" % (hostname, redis_ts_str, mtime_ts_str, line)
 
     def redis_query(self, redis_server, method, key):
         """ Query a Redis server (within a thread)
@@ -147,11 +151,16 @@ class Rainbow:
             for k in sorted(uniq_files):
                 print "%5s %s" % (uniq_files[k], k)
 
-    def display_redis_specific_key(self):
+    def display_redis_specific_key(self, key):
         """ Display contents of a specific key through all the Redis servers"""
 
         # Actual timestamp of Redis query
         now = time.time()
+
+        if self.args.logstash:
+            self.cached = True
+            cache = rainbowCache(key)
+            redis_resources = {}
 
         while not self.output_queue.empty():
             (hostname, result) = self.output_queue.get()
@@ -175,13 +184,21 @@ class Rainbow:
                 c = bz2.decompress(base64_data.decode("base64"))
             except:
                 c = "<error while decompressing bz2 data"
-            if self.args.signature:
+
+            if self.cached:
+                redis_resources[hostname] = "%s %s %s %s" % (c, epoch_redis, epoch_mtime, file_md5)
+            elif self.args.signature:
                 self.formated_output(now, hostname, epoch_redis,
                                      epoch_mtime, file_md5)
             else:
                 for line in c.split('\n'):
                     self.formated_output(now, hostname, epoch_redis,
                                          epoch_mtime, line)
+        if self.args.logstash:
+            c = rainbowCompare(key)
+            c.diff(cache.getResources(), redis_resources)
+            cache.update(redis_resources, key)
+            cache.dump()
 
     def redis_get_specific_key(self, key):
         """ Fetch contents of a specific key over all the Redis servers"""
@@ -197,9 +214,10 @@ class Rainbow:
             t.join(REDIS_TIMEOUT)
 
         keys_found = self.output_queue.qsize()
-        self.display_redis_specific_key()
+        self.display_redis_specific_key(key)
 
-        print "### Keys found: %s ###" % keys_found
+        if self.args.verbose:
+            print "### Keys found: %s ###" % keys_found
         if keys_found == 0:
             print 'try the -ac switch for a list of all available keys'
 
@@ -232,6 +250,10 @@ if __name__ == '__main__':
                         help="Colorize output", action='store_true')
     parser.add_argument("-s", "--signature",
                         help="MD5 of file", action='store_true')
+    parser.add_argument("-l", "--logstash",
+                        help="compute logstash output", action='store_true')
+    parser.add_argument("-v", "--verbose",
+                        help="verbose stdout informations", action='store_true')
     parser.add_argument("-C", "--conffile",
                         help="Configuration file to Use")
 
