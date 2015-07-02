@@ -24,7 +24,7 @@ limitations under the License.
 """
 
 import cPickle, anydbm
-import os.path
+import os
 
 class rainbow_cache_error(Exception):
     pass
@@ -38,6 +38,9 @@ class rainbowCache():
 
     if resourceName == None:
         raise rainbow_cache_error("Invalid resource name!")
+
+    if not os.path.exists(dbm_root):
+        os.makedirs(dbm_root)
 
     self.resourceName = resourceName
     self.dbm_file = os.path.join(dbm_root, "%s.index" % resourceName)

@@ -180,14 +180,16 @@ class Rainbow:
                 epoch_mtime = 0
                 file_md5 = "no_signature"
 
+            if self.cached:
+                redis_resources[hostname] = "%s %s %s %s" % (base64_data, epoch_redis, epoch_mtime, file_md5)
+                continue
+
             try:
                 c = bz2.decompress(base64_data.decode("base64"))
             except:
                 c = "<error while decompressing bz2 data"
 
-            if self.cached:
-                redis_resources[hostname] = "%s %s %s %s" % (c, epoch_redis, epoch_mtime, file_md5)
-            elif self.args.signature:
+            if self.args.signature:
                 self.formated_output(now, hostname, epoch_redis,
                                      epoch_mtime, file_md5)
             else:
