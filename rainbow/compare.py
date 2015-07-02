@@ -72,6 +72,7 @@ class rainbowCompare():
       for d in B - interAB:
         print "%s,%s,+,%s" % (rB[2], self.type, d)
     for r in addResources:
+      rB = resourcesB[r].split(' ')
       for d in bz2.decompress(rB[0].decode("base64")).split('\n'):
         print "%s,%s,+,%s" % (rB[2], self.type, d)
     pass
