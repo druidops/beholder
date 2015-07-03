@@ -165,7 +165,7 @@ class Rainbow:
 
         if self.args.logstash:
             self.cached = True
-            cache = rainbowCache(key)
+            cache = rainbowCache(key, config.get('cache', 'dbm_root'))
             redis_resources = {}
 
         while not self.output_queue.empty():
@@ -236,6 +236,8 @@ def autogen_conf(f):
     config.add_section('query_servers')
     config.set('query_servers', 'hostnames', 'redis1.example.org,'
                                              'redis2.example.org')
+    config.add_section('cache')
+    config.set('cache', 'dbm_root', '/tmp/rainbow')
     config.write(open(f, 'w'))
     print("Created an empty config file at %s." % f)
     print("Please modify it & re-run this command.")
