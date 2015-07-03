@@ -44,7 +44,7 @@ class rainbowCompare():
     '''
     return resourceA.split(' ')[3] != resourceB.split(' ')[3]
 
-  def diff(self, resourcesA, resourcesB, epoch_redis):
+  def diff(self, resourcesA, resourcesB, resource_mtime):
     # 1. select changed resources
     keysA = set(resourcesA.keys())
     keysB = set(resourcesB.keys())
@@ -68,13 +68,13 @@ class rainbowCompare():
       interAB = A.intersection(B)
     # 3. print the diff
       for d in A - interAB:
-        print "%s,%s,-,%s" % (epoch_redis, self.type, d)
+        print "%s,%s,-,%s" % (resource_mtime[r], self.type, d)
       for d in B - interAB:
-        print "%s,%s,+,%s" % (epoch_redis, self.type, d)
+        print "%s,%s,+,%s" % (resource_mtime[r], self.type, d)
     for r in addResources:
       rB = resourcesB[r].split(' ')
       for d in bz2.decompress(rB[0].decode("base64")).split('\n'):
-        print "%s,%s,+,%s" % (epoch_redis, self.type, d)
+        print "%s,%s,+,%s" % (resource_mtime[r], self.type, d)
     pass
 
     # packages resource diff fmt
