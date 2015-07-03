@@ -161,7 +161,7 @@ class Rainbow:
 
         # Actual timestamp of Redis query
         now = time.time()
-        resource_mtime = 0
+        resource_mtime = {}
 
         if self.args.logstash:
             self.cached = True
@@ -186,8 +186,8 @@ class Rainbow:
                 epoch_mtime = 0
                 file_md5 = "no_signature"
 
-            if not resource_mtime:
-                resource_mtime = epoch_mtime
+            if hostname not in resource_mtime:
+                resource_mtime[hostname] = epoch_mtime
             if self.cached:
                 redis_resources[hostname] = "%s %s %s %s" % (base64_data, epoch_redis, epoch_mtime, file_md5)
                 continue
