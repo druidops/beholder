@@ -189,7 +189,7 @@ class Rainbow:
             if hostname not in resource_mtime:
                 resource_mtime[hostname] = epoch_mtime
             if self.cached:
-                redis_resources[hostname] = "%s %s %s %s" % (base64_data, epoch_redis, epoch_mtime, file_md5)
+                redis_resources[hostname] = result
                 continue
 
             try:
