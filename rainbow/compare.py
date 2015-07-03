@@ -84,11 +84,13 @@ class rainbowCompare():
 
 if __name__ == '__main__':
   t1 = { 'h1': bz2.compress('<base64_encoded_data11>').encode("base64") + ' <epoch_redis> t1h1<epoch_mtime> <file_checksum11>',
-         'h2': bz2.compress("t1h2<base64_encoded_data>\nt1h2<base64_encoded_data>").encode("base64") + ' <epoch_redis> t1h2<epoch_mtime> <file_checksum12>'
+         'h2': bz2.compress("t1h2<base64_encoded_data>\nt1h2<base64_encoded_data>").encode("base64") + ' <epoch_redis> t1h2<epoch_mtime> <file_checksum12>',
+         'h4': bz2.compress("t1h4<base64_encoded_data>\nt1h4<base64_encoded_data>").encode("base64") + ' <epoch_redis> t1h4<epoch_mtime> <file_checksum13>'
        }
   t2 = { 'h1': bz2.compress('<base64_encoded_data21>').encode("base64") + ' <epoch_redis> t2h1<epoch_mtime> <file_checksum21>',
          'h2': bz2.compress('t2h2<base64_encoded_data>').encode("base64") + ' <epoch_redis> t2h2<epoch_mtime> <file_checksum21>',
          'h3': bz2.compress("t2h31<base64_encoded_data>\nt2h32<base64_encoded_data>").encode("base64") + ' <epoch_redis> t2h3<epoch_mtime> <file_checksum>'
        }
+  resource_mtime = { 'h1': 't2h1<epoch_mtime>', 'h2': 't2h2<epoch_mtime>', 'h3': 't2h3<epoch_mtime>' }
   rc = rainbowCompare('packages')
-  rc.diff(t1,t2)
+  rc.diff(t1,t2, resource_mtime)
