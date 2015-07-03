@@ -37,6 +37,7 @@ REDIS_TIMEOUT = 120
 class Rainbow:
 
     def __init__(self, cmdln_args, redis_servers, redis_timeout):
+        self._mtime = 0
         self.args = cmdln_args
         self.cached = False
         self.redis_timeout = redis_timeout
@@ -185,6 +186,8 @@ class Rainbow:
                 epoch_mtime = 0
                 file_md5 = "no_signature"
 
+            if not self._mtime:
+                self._mtime = epoch_redis
             if self.cached:
                 redis_resources[hostname] = "%s %s %s %s" % (base64_data, epoch_redis, epoch_mtime, file_md5)
                 continue
@@ -203,7 +206,7 @@ class Rainbow:
                                          epoch_mtime, line)
         if self.args.logstash:
             c = rainbowCompare(key)
-            c.diff(cache.getResources(), redis_resources)
+            c.diff(cache.getResources(), redis_resources, self._mtime)
             cache.update(redis_resources, key)
             cache.dump()
 
