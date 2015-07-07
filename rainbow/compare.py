@@ -74,7 +74,7 @@ class rainbowCompare():
     for r in addResources:
       rB = resourcesB.resources[r].split(' ')
       for d in bz2.decompress(rB[0].decode("base64")).split('\n'):
-        print "%s,%s,add,%s" % (resourceB.mtime[r], self.type, d)
+        print "%s,%s,add,%s" % (resourcesB.mtime[r], self.type, d)
     pass
 
     # packages resource diff fmt
