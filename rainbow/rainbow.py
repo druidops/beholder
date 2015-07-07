@@ -30,6 +30,7 @@ from threading import Thread
 from termcolor import colored
 from cache import rainbowCache
 from compare import rainbowCompare
+from resource import rainbowResource
 
 REDIS_TIMEOUT = 120
 
@@ -189,7 +190,7 @@ class Rainbow:
             if hostname not in resource_mtime:
                 resource_mtime[hostname] = epoch_mtime
             if self.cached:
-                redis_resources[hostname] = result
+                redis_resources[hostname] = rainbowResource(hostname, result).getResource()
                 continue
 
             try:
