@@ -30,5 +30,5 @@ class rainbowResource():
   def __init__(self):
 
     self.mtime = {}
-    self.resource = {}
+    self.resources = {}
 
