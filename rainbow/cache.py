@@ -74,7 +74,9 @@ class rainbowCache():
     dbmOut.close
 
   def getResources(self):
-    return _resources[self.resourceName]
+    resource = rainbowResource()
+    resource.reources = _resources[self.resourceName]
+    return resource
 
   def __str__(self):
     out = ''

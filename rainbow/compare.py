@@ -44,23 +44,23 @@ class rainbowCompare():
     '''
     return resourceA.split(' ')[3] != resourceB.split(' ')[3]
 
-  def diff(self, resourcesA, resourcesB, resource_mtime):
+  def diff(self, resourcesA, resourcesB):
     # 1. select changed resources
-    keysA = set(resourcesA.keys())
-    keysB = set(resourcesB.keys())
+    keysA = set(resourcesA.resources.keys())
+    keysB = set(resourcesB.resources.keys())
     inter = keysA.intersection(keysB)
     addResources = keysB - inter
     remResources = keysA - inter
     chgResources = []
     for r in inter:
-      if self.cmp(resourcesA[r],resourcesB[r]):
+      if self.cmp(resourcesA.resources[r],resourcesB.resources[r]):
         chgResources.append(r)
     #print addResources, remResources
     #print chgResources
     # 2. foreach chgt diff compute
     for r in chgResources:
-      rA = resourcesA[r].split(' ')
-      rB = resourcesB[r].split(' ')
+      rA = resourcesA.resources[r].split(' ')
+      rB = resourcesB.resources[r].split(' ')
       dataA = bz2.decompress(rA[0].decode("base64"))
       dataB = bz2.decompress(rB[0].decode("base64"))
       A = set( dataA.split('\n') )
@@ -68,13 +68,13 @@ class rainbowCompare():
       interAB = A.intersection(B)
     # 3. print the diff
       for d in A - interAB:
-        print "%s,%s,-,%s" % (resource_mtime[r], self.type, d)
+        print "%s,%s,-,%s" % (resourcesB.mtime[r], self.type, d)
       for d in B - interAB:
-        print "%s,%s,+,%s" % (resource_mtime[r], self.type, d)
+        print "%s,%s,+,%s" % (resourceB.mtime[r], self.type, d)
     for r in addResources:
-      rB = resourcesB[r].split(' ')
+      rB = resourcesB.resources[r].split(' ')
       for d in bz2.decompress(rB[0].decode("base64")).split('\n'):
-        print "%s,%s,+,%s" % (resource_mtime[r], self.type, d)
+        print "%s,%s,+,%s" % (resourceB.mtime[r], self.type, d)
     pass
 
     # packages resource diff fmt

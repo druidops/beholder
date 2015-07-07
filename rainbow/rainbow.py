@@ -162,12 +162,12 @@ class Rainbow:
 
         # Actual timestamp of Redis query
         now = time.time()
-        resource_mtime = {}
 
         if self.args.logstash:
             self.cached = True
-            cache = rainbowCache(key, config.get('cache', 'dbm_root'))
-            redis_resources = {}
+            cache_resource = rainbowResource()
+            cache_resource.resources = rainbowCache(key, config.get('cache', 'dbm_root')).getResources()
+            redis_resource = rainbowResource()
 
         while not self.output_queue.empty():
             (hostname, result) = self.output_queue.get()
@@ -187,10 +187,10 @@ class Rainbow:
                 epoch_mtime = 0
                 file_md5 = "no_signature"
 
-            if hostname not in resource_mtime:
-                resource_mtime[hostname] = epoch_mtime
+            if hostname not in resource.mtime:
+                redis_resource.mtime[hostname] = epoch_mtime
             if self.cached:
-                redis_resources[hostname] = rainbowResource(hostname, result).getResource()
+                redis_resource.resources[hostname] = result
                 continue
 
             try:
@@ -207,8 +207,8 @@ class Rainbow:
                                          epoch_mtime, line)
         if self.args.logstash:
             c = rainbowCompare(key)
-            c.diff(cache.getResources(), redis_resources, resource_mtime)
-            cache.update(redis_resources, key)
+            c.diff(cache_resource, redis_resource)
+            cache.update(redis_resource.resources, key)
             cache.dump()
 
     def redis_get_specific_key(self, key):
