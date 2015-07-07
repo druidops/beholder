@@ -26,6 +26,8 @@ limitations under the License.
 import cPickle, anydbm
 import os
 
+from resource import rainbowResource
+
 class rainbow_cache_error(Exception):
     pass
 
@@ -73,14 +75,15 @@ class rainbowCache():
       dbmOut[resource] = cPickle.dumps(_resources[resource], 1)
     dbmOut.close
 
-  def getResources(self):
-    resource = rainbowResource()
-    resource.reources = _resources[self.resourceName]
-    return resource
-
   def __str__(self):
     out = ''
     for resource in _resources:
       out += "%s: %s\n" % (resource, _resources[resource])
     return out
+
+def getResources(self):
+  resource = rainbowResource()
+  resource.reources = _resources[self.resourceName]
+  return resource
+
 
