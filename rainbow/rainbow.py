@@ -166,8 +166,7 @@ class Rainbow:
         if self.args.logstash:
             self.cached = True
             cache = rainbowCache(key, config.get('cache', 'dbm_root'))
-            cache_resource = rainbowResource()
-            cache_resource.resources = cache.getResources()
+            cache_resource = cache.getResource()
             redis_resource = rainbowResource()
 
         while not self.output_queue.empty():
