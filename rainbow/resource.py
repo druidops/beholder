@@ -27,18 +27,8 @@ class rainbow_resource_error(Exception):
 
 class rainbowResource():
 
-  def __init__(self, key=None, resource=None):
+  def __init__(self):
 
-    if resource == None or key == None:
-        raise rainbow_resource_error("Invalid resource!")
+    self.mtime = {}
+    self.resource = {}
 
-    self._key = key
-    self._resource = resource
-
-    self.extend()
-
-  def extend(self):
-    pass
-
-  def getResource(self):
-    return self._resource
