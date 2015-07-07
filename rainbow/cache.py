@@ -81,9 +81,9 @@ class rainbowCache():
       out += "%s: %s\n" % (resource, _resources[resource])
     return out
 
-def getResources(self):
-  resource = rainbowResource()
-  resource.reources = _resources[self.resourceName]
-  return resource
+  def getResources(self):
+    resource = rainbowResource()
+    resource.reources = _resources[self.resourceName]
+    return resource
 
 
